@@ -186,7 +186,7 @@ class GW{
   }
 
   get_playlist(playlist_id){
-    return this.api_call('playlist.getData', {playlist_id})
+    return this.get_playlist_page(playlist_id)
   }
 
   get_playlist_page(playlist_id){
