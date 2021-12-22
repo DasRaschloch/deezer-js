@@ -38,14 +38,16 @@ class GW{
   constructor(cookie_jar, headers){
     this.http_headers = headers
     this.cookie_jar = cookie_jar
+    this.api_token = null
   }
 
   async api_call(method, args, params){
     if (typeof args === undefined) args = {}
     if (typeof params === undefined) params = {}
+    if (!this.api_token && method != 'deezer.getUserData') this.api_token = await this._get_token()
     let p = {
       api_version: "1.0",
-      api_token: method == 'deezer.getUserData' ? 'null' : await this._get_token(),
+      api_token: method == 'deezer.getUserData' ? 'null' : this.api_token,
       input: '3',
       method: method,
       ...params
@@ -70,7 +72,15 @@ class GW{
       }
       throw new GWAPIError(`${method} ${args}:: ${e.name}: ${e.message}`)
     }
-    if (result_json.error.length || result_json.error.DATA_ERROR) {
+    if (result_json.error.length || Object.keys(result_json.error).length) {
+      if (
+        JSON.stringify(result_json.error) == '{"GATEWAY_ERROR":"invalid api token"}' ||
+        JSON.stringify(result_json.error) == '{"VALID_TOKEN_REQUIRED":"Invalid CSRF token"}'
+      ){
+        console.log("invalid")
+        this.api_token = await this._get_token()
+        return this.api_call(method, args, params)
+      }
       if (result_json.payload && result_json.payload.FALLBACK){
         Object.keys(result_json.payload.FALLBACK).forEach(key => {
           args[key] = result_json.payload.FALLBACK[key]
