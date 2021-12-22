@@ -66,11 +66,19 @@ class GW{
       console.debug("[ERROR] deezer.gw", method, args, e.name, e.message)
       if (["ECONNABORTED", "ECONNREFUSED", "ECONNRESET", "ENETRESET", "ETIMEDOUT"].includes(e.code)){
         await new Promise(r => setTimeout(r, 2000)) // sleep(2000ms)
-        return this.api_call(method, args)
+        return this.api_call(method, args, params)
       }
       throw new GWAPIError(`${method} ${args}:: ${e.name}: ${e.message}`)
     }
-    if (result_json.error.length) throw new GWAPIError(result_json.error)
+    if (result_json.error.length) {
+      if (result_json.payload && result_json.payload.FALLBACK){
+        Object.keys(result_json.payload.FALLBACK).forEach(key => {
+          args[key] = result_json.payload.FALLBACK[key]
+        })
+        return this.api_call(method, args, params)
+      }
+      throw new GWAPIError(result_json.error)
+    }
     return result_json.results
   }
 
@@ -85,7 +93,7 @@ class GW{
 
   get_user_profile_page(user_id, tab, options={}){
     const limit = options.limit || 10
-    return this.api_call('deezer.pageProfile', {user_id, tab, nb: limit})
+    return this.api_call('deezer.pageProfile', {USER_ID: user_id, tab, nb: limit})
   }
 
   get_user_favorite_ids(checksum = null, options={}){
@@ -99,20 +107,20 @@ class GW{
   }
 
   get_track(sng_id){
-    return this.api_call('song.getData', {sng_id})
+    return this.api_call('song.getData', {SNG_ID: sng_id})
   }
 
   get_track_page(sng_id){
-    return this.api_call('deezer.pageTrack', {sng_id})
+    return this.api_call('deezer.pageTrack', {SNG_ID: sng_id})
   }
 
   get_track_lyrics(sng_id){
-    return this.api_call('song.getLyrics', {sng_id})
+    return this.api_call('song.getLyrics', {SNG_ID: sng_id})
   }
 
   async get_tracks(sng_ids){
     let tracks_array = []
-    let body = await this.api_call('song.getListData', {sng_ids})
+    let body = await this.api_call('song.getListData', {SNG_ID: sng_ids})
     let errors = 0
     for (let i = 0; i < sng_ids.length; i++){
       if (sng_ids[0] != 0){
@@ -126,12 +134,12 @@ class GW{
   }
 
   get_album(alb_id){
-    return this.api_call('album.getData', {alb_id})
+    return this.api_call('album.getData', {ALB_ID: alb_id})
   }
 
   get_album_page(alb_id){
     return this.api_call('deezer.pageAlbum', {
-      alb_id,
+      ALB_ID: alb_id,
       lang: 'en',
       header: true,
       tab: 0
@@ -140,7 +148,7 @@ class GW{
 
   async get_album_tracks(alb_id){
     let tracks_array = []
-    let body = await this.api_call('song.getListByAlbum', {alb_id, nb: -1})
+    let body = await this.api_call('song.getListByAlbum', {ALB_ID: alb_id, nb: -1})
     body.data.forEach(track => {
       let _track = track
       _track.POSITION = body.data.indexOf(track)
@@ -150,12 +158,12 @@ class GW{
   }
 
   get_artist(art_id){
-    return this.api_call('artist.getData', {art_id})
+    return this.api_call('artist.getData', {ART_ID: art_id})
   }
 
   get_artist_page(art_id){
     return this.api_call('deezer.pageArtist', {
-      art_id,
+      ART_ID: art_id,
       lang: 'en',
       header: true,
       tab: 0
@@ -165,7 +173,7 @@ class GW{
   async get_artist_top_tracks(art_id, options={}){
     const limit = options.limit || 100
     let tracks_array = []
-    let body = await this.api_call('artist.getTopTrack', {art_id, nb: limit})
+    let body = await this.api_call('artist.getTopTrack', {ART_ID: art_id, nb: limit})
     body.data.forEach(track => {
       track.POSITION = body.data.indexOf(track)
       tracks_array.push(track)
@@ -177,7 +185,7 @@ class GW{
     const index = options.index || 0
     const limit = options.limit || 25
     return this.api_call('album.getDiscography', {
-      art_id,
+      ART_ID: art_id,
       discography_mode:"all",
       nb: limit,
       nb_songs: 0,
@@ -191,7 +199,7 @@ class GW{
 
   get_playlist_page(playlist_id){
     return this.api_call('deezer.pagePlaylist', {
-      playlist_id,
+      PLAYLIST_ID: playlist_id,
       lang: 'en',
       header: true,
       tab: 0
@@ -200,7 +208,7 @@ class GW{
 
   async get_playlist_tracks(playlist_id){
     let tracks_array = []
-    let body = await this.api_call('playlist.getSongs', {playlist_id, nb: -1})
+    let body = await this.api_call('playlist.getSongs', {PLAYLIST_ID: playlist_id, nb: -1})
     body.data.forEach(track => {
       track.POSITION = body.data.indexOf(track)
       tracks_array.push(track)
@@ -227,7 +235,7 @@ class GW{
       newSongs.push([song, 0])
     });
     return this.api_call('playlist.update', {
-      playlist_id,
+      PLAYLIST_ID: playlist_id,
       title,
       status,
       description,
@@ -241,7 +249,7 @@ class GW{
       newSongs.push([song, 0])
     });
     return this.api_call('playlist.addSongs', {
-      playlist_id,
+      PLAYLIST_ID: playlist_id,
       songs: newSongs,
       offset
     })
@@ -257,7 +265,7 @@ class GW{
       newSongs.push([song, 0])
     });
     return this.api_call('playlist.deleteSongs', {
-        playlist_id,
+        PLAYLIST_ID: playlist_id,
         songs: newSongs
     })
   }
@@ -267,31 +275,31 @@ class GW{
   }
 
   delete_playlist(playlist_id){
-    return this.api_call('playlist.delete', {playlist_id})
+    return this.api_call('playlist.delete', {PLAYLIST_ID: playlist_id})
   }
 
   add_song_to_favorites(sng_id){
-    return this.gw_api_call('favorite_song.add', {sng_id})
+    return this.gw_api_call('favorite_song.add', {SNG_ID: sng_id})
   }
 
   remove_song_from_favorites(sng_id){
-    return this.gw_api_call('favorite_song.remove', {sng_id})
+    return this.gw_api_call('favorite_song.remove', {SNG_ID: sng_id})
   }
 
   add_album_to_favorites(alb_id){
-    return this.gw_api_call('album.addFavorite', {alb_id})
+    return this.gw_api_call('album.addFavorite', {ALB_ID: alb_id})
   }
 
   remove_album_from_favorites(alb_id){
-    return this.gw_api_call('album.deleteFavorite', {alb_id})
+    return this.gw_api_call('album.deleteFavorite', {ALB_ID: alb_id})
   }
 
   add_artist_to_favorites(art_id){
-    return this.gw_api_call('artist.addFavorite', {art_id})
+    return this.gw_api_call('artist.addFavorite', {ART_ID: art_id})
   }
 
   remove_artist_from_favorites(art_id){
-    return this.gw_api_call('artist.deleteFavorite', {art_id})
+    return this.gw_api_call('artist.deleteFavorite', {ART_ID: art_id})
   }
 
   add_playlist_to_favorites(playlist_id){
@@ -395,6 +403,7 @@ class GW{
 
     if (body){
       if (body.LYRICS) body.DATA.LYRICS = body.LYRICS
+      if (body.ISRC) body.DATA.ALBUM_FALLBACK = body.ISRC
       body = body.DATA
     } else {
       body = await this.get_track(sng_id)
