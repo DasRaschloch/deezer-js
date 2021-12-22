@@ -70,7 +70,7 @@ class GW{
       }
       throw new GWAPIError(`${method} ${args}:: ${e.name}: ${e.message}`)
     }
-    if (result_json.error.length) {
+    if (result_json.error.length || result_json.error.DATA_ERROR) {
       if (result_json.payload && result_json.payload.FALLBACK){
         Object.keys(result_json.payload.FALLBACK).forEach(key => {
           args[key] = result_json.payload.FALLBACK[key]
