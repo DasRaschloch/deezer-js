@@ -117,7 +117,7 @@ class GW{
 
   async get_tracks(sng_ids){
     let tracks_array = []
-    let body = await this.api_call('song.getListData', {SNG_ID: sng_ids})
+    let body = await this.api_call('song.getListData', {SNG_IDS: sng_ids})
     let errors = 0
     for (let i = 0; i < sng_ids.length; i++){
       if (sng_ids[0] != 0){
