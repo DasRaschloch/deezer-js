@@ -89,6 +89,7 @@ class GW{
       }
       throw new GWAPIError(result_json.error)
     }
+    if (!this.api_token && method == 'deezer.getUserData') this.api_token = result_json.results.checkForm
     return result_json.results
   }
 
