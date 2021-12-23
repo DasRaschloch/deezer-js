@@ -64,7 +64,6 @@ class GW{
         JSON.stringify(result_json.error) == '{"GATEWAY_ERROR":"invalid api token"}' ||
         JSON.stringify(result_json.error) == '{"VALID_TOKEN_REQUIRED":"Invalid CSRF token"}'
       ){
-        console.log("invalid")
         this.api_token = await this._get_token()
         return this.api_call(method, args, params)
       }
