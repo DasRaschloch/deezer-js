@@ -173,6 +173,7 @@ function map_album(album){
     artist: {
       id: album.ART_ID,
       name: album.ART_NAME,
+      link: `https://www.deezer.com/artist/${album.ART_ID}`,
       type: "artist",
       // Extras
       rank: album.RANK_ART
