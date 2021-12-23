@@ -2,24 +2,11 @@ const got = require('got')
 const {map_artist_album, map_user_track, map_user_artist, map_user_album, map_user_playlist} = require('./utils.js')
 const { GWAPIError } = require('./errors.js')
 
-// Explicit Content Lyrics
-const LyricsStatus = {
-  NOT_EXPLICIT: 0, // Not Explicit
-  EXPLICIT: 1, // Explicit
-  UNKNOWN: 2, // Unknown
-  EDITED: 3, // Edited
-  PARTIALLY_EXPLICIT: 4, // Partially Explicit (Album "lyrics" only)
-  PARTIALLY_UNKNOWN: 5, // Partially Unknown (Album "lyrics" only)
-  NO_ADVICE: 6, // No Advice Available
-  PARTIALLY_NO_ADVICE: 7 // Partially No Advice Available (Album "lyrics" only)
-}
-
 const PlaylistStatus = {
   PUBLIC: 0,
   PRIVATE: 1,
   COLLABORATIVE: 2,
 }
-
 
 const EMPTY_TRACK_OBJ = {
   SNG_ID: 0,
@@ -87,7 +74,7 @@ class GW{
         })
         return this.api_call(method, args, params)
       }
-      throw new GWAPIError(result_json.error)
+      throw new GWAPIError(JSON.stringify(result_json.error))
     }
     if (!this.api_token && method == 'deezer.getUserData') this.api_token = result_json.results.checkForm
     return result_json.results
@@ -485,7 +472,6 @@ class GW{
 }
 
 module.exports = {
-  LyricsStatus,
   PlaylistStatus,
   EMPTY_TRACK_OBJ,
   GW
