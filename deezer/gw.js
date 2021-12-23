@@ -459,6 +459,7 @@ class GW{
     const limit = options.limit || 25
     const ids_raw = await this.get_user_favorite_ids(null, {limit})
     const ids = ids_raw.data.map(x => x.SNG_ID)
+    if (!ids.length) return []
     let data = await this.get_tracks(ids)
     let result = []
     data.forEach((track, i) => {
