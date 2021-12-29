@@ -105,7 +105,8 @@ class Deezer{
             'can_stream_hq': user_data.USER.OPTIONS.web_hq || user_data.USER.OPTIONS.mobile_hq,
             'can_stream_lossless': user_data.USER.OPTIONS.web_lossless || user_data.USER.OPTIONS.mobile_lossless,
             'country': user_data.USER.OPTIONS.license_country,
-            'language': user_data.USER.SETTING.global.language
+            'language': user_data.USER.SETTING.global.language,
+            'loved_tracks': child.LOVEDTRACKS_ID
           })
         }
       })
@@ -118,7 +119,8 @@ class Deezer{
         'can_stream_hq': user_data.USER.OPTIONS.web_hq || user_data.USER.OPTIONS.mobile_hq,
         'can_stream_lossless': user_data.USER.OPTIONS.web_lossless || user_data.USER.OPTIONS.mobile_lossless,
         'country': user_data.USER.OPTIONS.license_country,
-        'language': user_data.USER.SETTING.global.language
+        'language': user_data.USER.SETTING.global.language,
+        'loved_tracks': user_data.USER.LOVEDTRACKS_ID
       })
     }
   }
