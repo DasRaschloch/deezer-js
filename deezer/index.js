@@ -105,7 +105,7 @@ class Deezer{
             'can_stream_hq': user_data.USER.OPTIONS.web_hq || user_data.USER.OPTIONS.mobile_hq,
             'can_stream_lossless': user_data.USER.OPTIONS.web_lossless || user_data.USER.OPTIONS.mobile_lossless,
             'country': user_data.USER.OPTIONS.license_country,
-            'language': user_data.USER.SETTING.global.language,
+            'language': user_data.USER.SETTING.global.language || "",
             'loved_tracks': child.LOVEDTRACKS_ID
           })
         }
@@ -119,7 +119,7 @@ class Deezer{
         'can_stream_hq': user_data.USER.OPTIONS.web_hq || user_data.USER.OPTIONS.mobile_hq,
         'can_stream_lossless': user_data.USER.OPTIONS.web_lossless || user_data.USER.OPTIONS.mobile_lossless,
         'country': user_data.USER.OPTIONS.license_country,
-        'language': user_data.USER.SETTING.global.language,
+        'language': user_data.USER.SETTING.global.language || "",
         'loved_tracks': user_data.USER.LOVEDTRACKS_ID
       })
     }
@@ -129,7 +129,7 @@ class Deezer{
     if (this.childs.length-1 < child_n) child_n = 0
     this.current_user = this.childs[child_n]
     this.selected_account = child_n
-    this.http_headers["Accept-Language"] = this.current_user.language.replace(/[^0-9A-Za-z *,-.;=]/g, '')
+    this.http_headers["Accept-Language"] = this.current_user.language.toString().replace(/[^0-9A-Za-z *,-.;=]/g, '')
 
     return [this.current_user, this.selected_account]
   }
