@@ -129,7 +129,12 @@ class Deezer{
     if (this.childs.length-1 < child_n) child_n = 0
     this.current_user = this.childs[child_n]
     this.selected_account = child_n
-    this.http_headers["Accept-Language"] = this.current_user.language.toString().replace(/[^0-9A-Za-z *,-.;=]/g, '')
+    let lang = this.current_user.language.toString().replace(/[^0-9A-Za-z *,-.;=]/g, '')
+    if (lang.slice(2,1) == '-')
+      lang = lang.slice(0,5)
+    else
+      lang = lang.slice(0,2)
+    this.http_headers["Accept-Language"] = lang
 
     return [this.current_user, this.selected_account]
   }
