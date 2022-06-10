@@ -462,9 +462,13 @@ class GW{
     if (!ids.length) return []
     let data = await this.get_tracks(ids)
     let result = []
-    data.forEach((track, i) => {
+    let i = 0
+    data.forEach((track) => {
+      if (!track) return
+      while (track.SNG_ID != ids[i]) i++
       track = {...track, ...ids_raw.data[i]}
       result.push(map_user_track(track))
+      i++
     })
     return result
   }
