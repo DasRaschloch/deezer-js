@@ -41,9 +41,8 @@ class API{
     const delay = 2000
     let attempt = 0
     try {
-
       while (attempt < maxRetries){
-        let response = await got.get("https://api.deezer.com/" + method, {
+        result_json = await got.get("https://api.deezer.com/" + method, {
           searchParams: args,
           cookieJar: this.cookie_jar,
           headers: this.http_headers,
@@ -51,14 +50,13 @@ class API{
             rejectUnauthorized: false
           },
           timeout: 30000
-        })
-        if (attempt < maxRetries && response.statusCode === 403){
+        }).json()
+        if (attempt < maxRetries && result_json.error && result_json.error.code === 403){
           await new Promise(r => setTimeout(r, delay))
           attempt++
           delay *= 2
           continue
         }
-        result_json = await response.json()
         break
       }
     } catch (e) {

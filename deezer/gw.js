@@ -45,7 +45,7 @@ class GW{
       const delay = 2000
       let attempt = 0
       while (attempt < maxRetries){
-        let response = await got.post("http://www.deezer.com/ajax/gw-light.php", {
+        result_json = await got.post("http://www.deezer.com/ajax/gw-light.php", {
           searchParams: p,
           json: args,
           cookieJar: this.cookie_jar,
@@ -54,14 +54,13 @@ class GW{
             rejectUnauthorized: false
           },
           timeout: 30000
-        })
-        if (attempt < maxRetries && response.statusCode === 403){
+        }).json()
+        if (attempt < maxRetries && result_json.error && result_json.error.code === 403){
             await new Promise(r => setTimeout(r, delay))
             attempt++
             delay *= 2
             continue
         }
-        result_json = await response.json()
         break
       }
     }catch (e){
