@@ -41,16 +41,29 @@ class GW{
     }
     let result_json
     try{
-      result_json = await got.post("http://www.deezer.com/ajax/gw-light.php", {
-        searchParams: p,
-        json: args,
-        cookieJar: this.cookie_jar,
-        headers: this.http_headers,
-        https: {
-					rejectUnauthorized: false
-				},
-        timeout: 30000
-      }).json()
+      const maxRetries = 3
+      const delay = 2000
+      let attempt = 0
+      while (attempt < maxRetries){
+        let response = await got.post("http://www.deezer.com/ajax/gw-light.php", {
+          searchParams: p,
+          json: args,
+          cookieJar: this.cookie_jar,
+          headers: this.http_headers,
+          https: {
+            rejectUnauthorized: false
+          },
+          timeout: 30000
+        })
+        if (attempt < maxRetries && response.statusCode === 403){
+            await new Promise(r => setTimeout(r, delay))
+            attempt++
+            delay *= 2
+            continue
+        }
+        result_json = await response.json()
+        break
+      }
     }catch (e){
       console.debug("[ERROR] deezer.gw", method, args, e.name, e.message)
       if (["ECONNABORTED", "ECONNREFUSED", "ECONNRESET", "ENETRESET", "ETIMEDOUT"].includes(e.code)){
