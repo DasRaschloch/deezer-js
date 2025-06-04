@@ -39,7 +39,7 @@ class GW{
       method: method,
       ...params
     }
-    await new Promise(r => setTimeout(r, 100))
+    await new Promise(r => setTimeout(r, Math.floor(Math.random() * 50) + 100));
     const maxRetries = 4
     let delay = 5000
     let attempt = 0
