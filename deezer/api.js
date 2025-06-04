@@ -36,12 +36,13 @@ class API{
   async api_call(method, args){
     if (typeof args == "undefined") args = {}
     if (this.access_token) args.access_token = this.access_token
-    let result_json;
-    const maxRetries = 3
-    const delay = 2000
+    await new Promise(r => setTimeout(r, 100)) //deezer allows only 50 reqests per 5 seconds https://developers.deezer.com/api so every 100ms a request. Otherwise we encounter IP-Bans
+    const maxRetries = 4
+    let delay = 5000
     let attempt = 0
-    try {
-      while (attempt < maxRetries){
+    let result_json
+    while (attempt < maxRetries){
+      try {
         result_json = await got.get("https://api.deezer.com/" + method, {
           searchParams: args,
           cookieJar: this.cookie_jar,
@@ -51,21 +52,22 @@ class API{
           },
           timeout: 30000
         }).json()
-        if (attempt < maxRetries && result_json.error && result_json.error.code === 403){
+        break
+      }catch (e) {
+        if (attempt < maxRetries-1 && e.response && (e.response.statusCode === 403 || e.response.statusCode === 429)){
+          console.log(`${new Date().toISOString()} Rate limit detected, slowing down for ${delay}ms. Attempt ${attempt+1} of ${maxRetries} json is ${result_json} id is ${method}`);
           await new Promise(r => setTimeout(r, delay))
           attempt++
           delay *= 2
           continue
         }
-        break
+        console.debug("[ERROR] deezer.api", method, args, e.name, e.message)
+        if (["ECONNABORTED", "ECONNREFUSED", "ECONNRESET", "ENETRESET", "ETIMEDOUT"].includes(e.code)){
+          await new Promise(r => setTimeout(r, 2000)) // sleep(2000ms)
+          return this.api_call(method, args)
+        }
+        throw new APIError(`${method} ${args}:: ${e.name}: ${e.message}`)
       }
-    } catch (e) {
-      console.debug("[ERROR] deezer.api", method, args, e.name, e.message)
-      if (["ECONNABORTED", "ECONNREFUSED", "ECONNRESET", "ENETRESET", "ETIMEDOUT"].includes(e.code)){
-        await new Promise(r => setTimeout(r, 2000)) // sleep(2000ms)
-        return this.api_call(method, args)
-      }
-      throw new APIError(`${method} ${args}:: ${e.name}: ${e.message}`)
     }
     if (result_json.error){
       if (result_json.error.code){

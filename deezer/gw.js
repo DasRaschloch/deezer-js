@@ -39,12 +39,13 @@ class GW{
       method: method,
       ...params
     }
+    await new Promise(r => setTimeout(r, 100))
+    const maxRetries = 4
+    let delay = 5000
+    let attempt = 0
     let result_json
-    try{
-      const maxRetries = 3
-      const delay = 2000
-      let attempt = 0
-      while (attempt < maxRetries){
+    while (attempt < maxRetries){
+      try{
         result_json = await got.post("http://www.deezer.com/ajax/gw-light.php", {
           searchParams: p,
           json: args,
@@ -55,21 +56,22 @@ class GW{
           },
           timeout: 30000
         }).json()
-        if (attempt < maxRetries && result_json.error && result_json.error.code === 403){
-            await new Promise(r => setTimeout(r, delay))
-            attempt++
-            delay *= 2
-            continue
-        }
         break
+      }catch (e){
+        if (attempt < maxRetries-1 && e.response && (e.response.statusCode === 403 || e.response.statusCode === 429)){
+          console.log(`${new Date().toISOString()} Rate limit detected, slowing down for ${delay}ms. Attempt ${attempt+1} of ${maxRetries}`);
+          await new Promise(r => setTimeout(r, delay))
+          attempt++
+          delay *= 2
+          continue
+        }
+        console.debug("[ERROR] deezer.gw", method, args, e.name, e.message)
+        if (["ECONNABORTED", "ECONNREFUSED", "ECONNRESET", "ENETRESET", "ETIMEDOUT"].includes(e.code)){
+          await new Promise(r => setTimeout(r, 2000)) // sleep(2000ms)
+          return this.api_call(method, args, params)
+        }
+        throw new GWAPIError(`${method} ${args}:: ${e.name}: ${e.message}`)
       }
-    }catch (e){
-      console.debug("[ERROR] deezer.gw", method, args, e.name, e.message)
-      if (["ECONNABORTED", "ECONNREFUSED", "ECONNRESET", "ENETRESET", "ETIMEDOUT"].includes(e.code)){
-        await new Promise(r => setTimeout(r, 2000)) // sleep(2000ms)
-        return this.api_call(method, args, params)
-      }
-      throw new GWAPIError(`${method} ${args}:: ${e.name}: ${e.message}`)
     }
     if (result_json.error.length || Object.keys(result_json.error).length) {
       if (
